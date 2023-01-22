@@ -13,4 +13,5 @@ class QuestionAdmin(admin.ModelAdmin):
         "created_at",
     )
     search_fields = ("unit", "number", "text", "answer")
+    list_filter = ("unit",)
     ordering = ("unit", "number")
