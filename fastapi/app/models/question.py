@@ -23,4 +23,4 @@ class Question(TimestampModelMixin):
         ordering = ("unit", "number")
 
     def __str__(self) -> str:
-        return f"{self.unit} - {self.number}"
+        return f"Question - {self.number} [{self.unit}]"
