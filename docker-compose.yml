@@ -1,0 +1,13 @@
+version: "3.7"
+services:
+  fastapi:
+    build: ./fastapi
+    volumes:
+      - ./fastapi:/src
+    ports:
+      - 8000:8000
+      - 8001:8001
+    environment:
+      ENV_STATE: local # 上書き (env_fileより優先)
+    env_file:
+      - fastapi/fastapi.env
