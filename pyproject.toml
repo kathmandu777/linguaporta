@@ -6,6 +6,8 @@ authors = ["kathmandu777 <mahhakatomanato@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
+selenium = "^4.7.2"
+requests = "^2.28.2"
 
 [tool.poetry.dev-dependencies]
 black = "^22.6.0"
