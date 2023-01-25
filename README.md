@@ -7,10 +7,27 @@ linguaportaを自動で解答するためのスクリプト+サーバー(DB)で�
 - 単語の意味
 - 空所補充
 
+## 初心者向けの使い方
+1. pythonの環境構築
+2. リポジトリをクローン
+    ```sh
+    git clone https://github.com/kathmandu777/linguaporta.git
+    ```
+3. `bot/requirements.txt` に書かれているライブラリをインストール
+    ```sh
+    pip install -r bot/requirements.txt
+    ```
+4. 自分のブラウザのドライバーをダウンロード (バージョンに注意)
+5. `CHROMEDRIVER` 変数にドライバーのパスを設定
+6. `bot/main.py` を実行
+    ```sh
+    python bot/main.py
+    ```
 
-## Prerequisites
+## For Developers
+### Prerequisites
 
-### Poetry
+#### Poetry
 
 Dependency management for Python files is done using POETRY.
 
@@ -20,14 +37,14 @@ Dependency management for Python files is done using POETRY.
 1. `pip install --upgrade pip` (if needed)
 1. `poetry install` (After cloning this repository)
 
-### pre-commit (for developers)
+#### pre-commit (for developers)
 
 This tool defines commands to be executed before committing. It is already defined in `.pre-commit-config.yaml`, so you need to configure it in your environment. Please follow the steps below.
 
 1. <https://pre-commit.com/#installation>
 1. `pre-commit install` (After cloning this repository)
 
-## Usage
+### Usage (Local Server)
 
 1. Clone this repository
 
@@ -41,11 +58,10 @@ This tool defines commands to be executed before committing. It is already defin
 
 1. Run bot/main.py
    ```sh
-   cd bot
-   python main.py
+   python bot/main.py
    ```
 
-### Additional commands
+#### Additional commands
 - Dependency install
 
     ```sh
@@ -70,7 +86,7 @@ This tool defines commands to be executed before committing. It is already defin
     docker-compose run --rm fastapi poetry run python manage.py createsuperuser
     ```
 
-## Alias for frequently used commands
+### Alias for frequently used commands
 
 ```sh
 source alias.sh

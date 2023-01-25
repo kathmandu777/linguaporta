@@ -28,7 +28,7 @@ def login() -> None:
 
 
 def select_cocet() -> None:
-    for i in range(5):
+    for _ in range(5):
         try:  # TOPから開く
             driver.execute_script("document.sStudy.submit()")  # 本の選択画面へ移行
             driver.execute_script("select_reference('70')")  # cocet2600を選択
@@ -48,8 +48,7 @@ def select_cocet() -> None:
     sys.exit()
 
 
-# 解答ユニット選択
-def select_unit(category_start: int, unit_start: int) -> tuple[int, list]:
+def select_unit(category_start: int, unit_start: int) -> tuple[str, int, list]:  # (lesson_name, unit_id, db_data)
     unit_start = (unit_start - 1) // 25 + 1
     try:
         driver.execute_script(("select_unit('drill', '" + str(category_start + (unit_start - 1) * 4) + "', '');"))
@@ -61,7 +60,7 @@ def select_unit(category_start: int, unit_start: int) -> tuple[int, list]:
     sleep(SLEEP_TIME)
     lesson_name = driver.find_element(By.CLASS_NAME, "bloc-resp-lessonname").text
     try:
-        units = requests.get("http://localhost:8000/api/units/").json()
+        units = requests.get(f"{SERVER_ORIGIN}/api/units", headers=HEADER).json()
     except BaseException:
         print("DB serverに接続できませんでした。")
         driver.quit()
@@ -69,11 +68,18 @@ def select_unit(category_start: int, unit_start: int) -> tuple[int, list]:
 
     if lesson_name in [x["name"] for x in units]:
         id: int = [x["id"] for x in units if x["name"] == lesson_name][0]
-        db_data: list = requests.get(f"http://localhost:8000/api/units/{id}/questions").json()
-        return (id, db_data)
+        db_data: list = requests.get(f"{SERVER_ORIGIN}/api/units/{id}/questions", headers=HEADER).json()
+        if len(db_data) == 25:
+            print(f"DBに {lesson_name} のデータはすべて存在しました。")
+        else:
+            print(f"DBに {lesson_name} のデータは{len(db_data)}つ存在しました。")
+        return lesson_name, id, db_data
     else:
-        created_unit = requests.post("http://localhost:8000/api/units/", data=json.dumps({"name": lesson_name})).json()
-        return (created_unit["id"], [])
+        print(f"DBに{lesson_name}のデータは存在しませんでした")
+        created_unit = requests.post(
+            f"{SERVER_ORIGIN}/api/units", data=json.dumps({"name": lesson_name}), headers=HEADER
+        ).json()
+        return lesson_name, created_unit["id"], []
 
 
 def set_answer(category_id: int, question_number: int, db_data: list, history: dict[int, str]) -> str:
@@ -142,24 +148,21 @@ def get_correct_answer(category_id: int) -> str:
     raise Exception("category_idが不正です。")
 
 
-def solve(category_id: int, db_unit_id: int, db_data: list) -> None:
+def solve(lesson_name: str, category_id: int, db_unit_id: int, db_data: list) -> None:
     history = {}
     while True:
-        print("=================================================")
+        print(f"============= {lesson_name} =============")
 
-        # 問題文の取得
         try:
-            question_text = driver.find_element(By.ID, "qu02").text  # 単語の意味と空所補充の場合はqu02
+            question_text = driver.find_element(By.ID, "qu02").text  # NOTE: 単語の意味と空所補充の場合はqu02
         except BaseException:
             print("このユニットは既に完了しています。")
             break
         print("問題:", question_text)
 
-        # 問題番号の取得
         question_number = int(driver.find_element(By.XPATH, "//*[contains(text(), '問題番号')]").text.replace("問題番号：", ""))
         print("問題番号:", question_number)
 
-        # 解答の入力
         answer = set_answer(category_id, question_number, db_data, history)
 
         # "解答する"ボタンのクリック
@@ -173,12 +176,12 @@ def solve(category_id: int, db_unit_id: int, db_data: list) -> None:
                 sleep(SLEEP_TIME)
 
         # 正解と不正解の判定
-        for i in range(150):
+        for i in range(300):  # NOTE: ここのサーバーの応答が遅いため、長めにしておく
             try:
                 driver.find_element(By.ID, "true_msg")
                 print("結果: 正解")
                 requests.post(
-                    f"http://localhost:8000/api/units/{db_unit_id}/questions/",
+                    f"{SERVER_ORIGIN}/api/units/{db_unit_id}/questions",
                     data=json.dumps(
                         {
                             "number": question_number,
@@ -186,6 +189,7 @@ def solve(category_id: int, db_unit_id: int, db_data: list) -> None:
                             "answer": answer,
                         }
                     ),
+                    headers=HEADER,
                 )
                 break
             except BaseException:
@@ -195,12 +199,12 @@ def solve(category_id: int, db_unit_id: int, db_data: list) -> None:
                 driver.find_element(By.ID, "false_msg")
                 # 解答を見る
                 driver.find_element(By.CLASS_NAME, "btn-answer-view").submit()
-                sleep(SLEEP_TIME * 2)  # for文処理を挟んでいないため、長めにしておく
+                sleep(SLEEP_TIME * 2)  # NOTE: for文処理を挟んでいないため、長めにしておく
                 correct_answer = get_correct_answer(category_id)
                 print(f"結果: 不正解 ({correct_answer})")
                 history[question_number] = correct_answer
                 requests.post(
-                    f"http://localhost:8000/api/units/{db_unit_id}/questions/",
+                    f"{SERVER_ORIGIN}/api/units/{db_unit_id}/questions",
                     data=json.dumps(
                         {
                             "number": question_number,
@@ -208,12 +212,13 @@ def solve(category_id: int, db_unit_id: int, db_data: list) -> None:
                             "answer": correct_answer,
                         }
                     ),
+                    headers=HEADER,
                 )
                 break
             except BaseException:
                 pass
 
-            if i % 5 == 0:  # 毎回表示すると見づらいので、5回に1回表示
+            if i % 5 == 0:  # NOTE: 毎回表示すると見づらいので、5回に1回表示
                 print("correcting...")
             sleep(SLEEP_TIME)
         else:
@@ -230,13 +235,24 @@ def solve(category_id: int, db_unit_id: int, db_data: list) -> None:
 
 
 if __name__ == "__main__":
-    CHROMEDRIVER = "./chromedriver"
+    SERVER_ORIGIN = "https://linguaporta-mtzobacrda-an.a.run.app"  # NOTE: don't include slash at the end
+    for _ in range(3):
+        api_key = input("API_KEY: ")
+        HEADER = {"x-api-key": api_key}
+        res = requests.get(f"{SERVER_ORIGIN}/api/units", headers=HEADER)
+        if res.status_code == 200:
+            break
+        print("API_KEYが不正です。再度入力して下さい。")
+    else:
+        print("失敗回数の上限に達しました。プログラムを終了します。")
+        sys.exit()
+
+    CHROMEDRIVER = "./chromedriver"  # change for your environment
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")
     chrome_service = service.Service(executable_path=CHROMEDRIVER)
     driver = webdriver.Chrome(service=chrome_service, options=options)
 
-    # ログイン
     driver.get("https://w5.linguaporta.jp/user/seibido/index.php")
     driver.set_window_size(720, 1280)
 
@@ -279,11 +295,14 @@ if __name__ == "__main__":
     while start <= end:
         select_cocet()
         print("現在のユニット:", str(start) + "-" + str(start + 24))
-        unit_id, db_data = select_unit(CATEGORIES[category_id][1], start)
-        solve(category_id, unit_id, db_data)
+        lesson_name, unit_id, db_data = select_unit(CATEGORIES[category_id][1], start)
+        solve(lesson_name, category_id, unit_id, db_data)
+        print("##############################################")
+        print(f"ユニット{start}-{start + 24}を完了しました。")
+        print("##############################################")
+
         start += 25
-        print("1ユニットを終了しました。")
 
     print("指定されたすべてのユニットの解答を完了しました。プログラムを終了します。")
-    driver.quit()  # ブラウザーを終了する。
+    driver.quit()
     sys.exit()
