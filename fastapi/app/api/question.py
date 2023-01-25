@@ -34,6 +34,7 @@ class QuestionAPI:
         unit_id: int,
         schema: CreateQuestionSchema,
     ) -> Question:
-        return await sync_to_async(Question.objects.create)(
-            unit_id=unit_id, **schema.dict()
+        obj, _ = await sync_to_async(Question.objects.update_or_create)(
+            unit_id=unit_id, number=schema.number, defaults=schema.dict()
         )
+        return obj

@@ -1,6 +1,7 @@
 from django.db import models
 
 from .base import TimestampModelMixin
+from .question import Question
 
 
 class Unit(TimestampModelMixin):
@@ -9,3 +10,7 @@ class Unit(TimestampModelMixin):
 
     def __str__(self) -> str:
         return f"Unit - {self.name}"
+
+    @property
+    def questions(self) -> list["Question"]:
+        return list(self.question_set.all())
