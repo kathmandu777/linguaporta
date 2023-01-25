@@ -236,7 +236,6 @@ def solve(lesson_name: str, category_id: int, db_unit_id: int, db_data: list) ->
 
 if __name__ == "__main__":
     SERVER_ORIGIN = "https://linguaporta-mtzobacrda-an.a.run.app"  # NOTE: don't include slash at the end
-    SERVER_ORIGIN = "http://localhost:8000"  # NOTE: don't include slash at the end
     for _ in range(3):
         api_key = input("API_KEY: ")
         HEADER = {"x-api-key": api_key}
