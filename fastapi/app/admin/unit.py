@@ -36,7 +36,9 @@ class UnitAdmin(admin.ModelAdmin):
         return re.sub(r"\(\d+-\d+\)", "", obj.name)
 
     def range_start(self, obj: Unit) -> int:
-        return int(re.findall(r"\((\d+)-\d+\)", obj.name)[0])
+        matched = re.findall(r"\((\d+)-\d+\)", obj.name)
+        return int(matched[0]) if matched else 0
 
     def range_end(self, obj: Unit) -> int:
-        return int(re.findall(r"\(\d+-(\d+)\)", obj.name)[0])
+        matched = re.findall(r"\(\d+-(\d+)\)", obj.name)
+        return int(matched[0]) if matched else 0

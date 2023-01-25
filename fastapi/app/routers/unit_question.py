@@ -1,11 +1,6 @@
 from app.api import QuestionAPI, UnitAPI
 from app.models import Question, Unit
-from app.schemas import (
-    CreateQuestionSchema,
-    CreateUnitSchema,
-    ReadQuestionSchema,
-    ReadUnitSchema,
-)
+from app.schemas import CreateQuestionSchema, CreateUnitSchema, ReadQuestionSchema, ReadUnitSchema
 
 from fastapi import APIRouter, Request
 
@@ -36,7 +31,7 @@ async def create_unit(
 
 
 @unit_router.get(
-    "/{unit_id}/questions",
+    "/{unit_id}/questions/",
     response_model=list[ReadQuestionSchema],
     status_code=200,
 )
@@ -48,7 +43,7 @@ async def get_questions(
 
 
 @unit_router.post(
-    "/{unit_id}/questions",
+    "/{unit_id}/questions/",
     response_model=ReadQuestionSchema,
     status_code=201,
 )

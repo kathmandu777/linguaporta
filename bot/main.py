@@ -60,7 +60,7 @@ def select_unit(category_start: int, unit_start: int) -> tuple[str, int, list]: 
     sleep(SLEEP_TIME)
     lesson_name = driver.find_element(By.CLASS_NAME, "bloc-resp-lessonname").text
     try:
-        units = requests.get(f"{SERVER_ORIGIN}/api/units", headers=HEADER).json()
+        units = requests.get(f"{SERVER_ORIGIN}/api/units/", headers=HEADER).json()
     except BaseException:
         print("DB serverに接続できませんでした。")
         driver.quit()
@@ -68,7 +68,7 @@ def select_unit(category_start: int, unit_start: int) -> tuple[str, int, list]: 
 
     if lesson_name in [x["name"] for x in units]:
         id: int = [x["id"] for x in units if x["name"] == lesson_name][0]
-        db_data: list = requests.get(f"{SERVER_ORIGIN}/api/units/{id}/questions", headers=HEADER).json()
+        db_data: list = requests.get(f"{SERVER_ORIGIN}/api/units/{id}/questions/", headers=HEADER).json()
         if len(db_data) == 25:
             print(f"DBに {lesson_name} のデータはすべて存在しました。")
         else:
@@ -77,7 +77,7 @@ def select_unit(category_start: int, unit_start: int) -> tuple[str, int, list]: 
     else:
         print(f"DBに{lesson_name}のデータは存在しませんでした")
         created_unit = requests.post(
-            f"{SERVER_ORIGIN}/api/units", data=json.dumps({"name": lesson_name}), headers=HEADER
+            f"{SERVER_ORIGIN}/api/units/", data=json.dumps({"name": lesson_name}), headers=HEADER
         ).json()
         return lesson_name, created_unit["id"], []
 
@@ -181,7 +181,7 @@ def solve(lesson_name: str, category_id: int, db_unit_id: int, db_data: list) ->
                 driver.find_element(By.ID, "true_msg")
                 print("結果: 正解")
                 requests.post(
-                    f"{SERVER_ORIGIN}/api/units/{db_unit_id}/questions",
+                    f"{SERVER_ORIGIN}/api/units/{db_unit_id}/questions/",
                     data=json.dumps(
                         {
                             "number": question_number,
@@ -204,7 +204,7 @@ def solve(lesson_name: str, category_id: int, db_unit_id: int, db_data: list) ->
                 print(f"結果: 不正解 ({correct_answer})")
                 history[question_number] = correct_answer
                 requests.post(
-                    f"{SERVER_ORIGIN}/api/units/{db_unit_id}/questions",
+                    f"{SERVER_ORIGIN}/api/units/{db_unit_id}/questions/",
                     data=json.dumps(
                         {
                             "number": question_number,
@@ -236,10 +236,11 @@ def solve(lesson_name: str, category_id: int, db_unit_id: int, db_data: list) ->
 
 if __name__ == "__main__":
     SERVER_ORIGIN = "https://linguaporta-mtzobacrda-an.a.run.app"  # NOTE: don't include slash at the end
+    SERVER_ORIGIN = "http://localhost:8000"  # NOTE: don't include slash at the end
     for _ in range(3):
         api_key = input("API_KEY: ")
         HEADER = {"x-api-key": api_key}
-        res = requests.get(f"{SERVER_ORIGIN}/api/units", headers=HEADER)
+        res = requests.get(f"{SERVER_ORIGIN}/api/units/", headers=HEADER)
         if res.status_code == 200:
             break
         print("API_KEYが不正です。再度入力して下さい。")
