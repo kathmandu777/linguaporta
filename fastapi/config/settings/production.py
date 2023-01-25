@@ -4,7 +4,7 @@ from .base import *  # noqa
 
 DEBUG = False
 
-ALLOWED_HOSTS = os.environ["ALLOWED_HOSTS"].split(",")
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",")
 
 SECURE_SSL_REDIRECT = True
 CSRF_COOKIE_SECURE = True
