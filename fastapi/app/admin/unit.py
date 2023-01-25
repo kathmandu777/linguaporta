@@ -10,6 +10,7 @@ class QuestionInline(admin.TabularInline):
     extra = 0
     fields = ("number", "text", "answer", "created_at")
     ordering = ("number",)
+    readonly_fields = ("created_at",)
 
 
 @admin.register(Unit)
@@ -17,6 +18,7 @@ class UnitAdmin(admin.ModelAdmin):
     inlines = (QuestionInline,)
 
     list_display = (
+        "id",
         "name",
         "questions_count",
         "category_name",
