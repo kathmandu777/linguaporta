@@ -1,0 +1,9 @@
+version: "3.7"
+services:
+  fastapi:
+    build:
+      context: ./fastapi
+      dockerfile: Dockerfile
+    image: ${IMAGE}
+    environment:
+      ENV_STATE: production
