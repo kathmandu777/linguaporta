@@ -14,4 +14,4 @@ class QuestionAdmin(admin.ModelAdmin):
     )
     search_fields = ("number", "text", "answer")
     list_filter = ("unit",)
-    ordering = ("unit", "number")
+    ordering = ("-created_at",)

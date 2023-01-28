@@ -27,7 +27,8 @@ class UnitAdmin(admin.ModelAdmin):
         "created_at",
     )
     search_fields = ("name",)
-    # ordering = ("category_name", "range_start")
+    # ordering = ("category_name", "range_start") # TODO: propertyでソートできない
+    ordering = ("-created_at",)
 
     def questions_count(self, obj: Unit) -> int:
         return Question.objects.filter(unit=obj).count()
