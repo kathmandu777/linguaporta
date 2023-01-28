@@ -39,6 +39,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from .middlewares import ApiKeyUsedTimesCountMiddleware
+
 fastapi_app = FastAPI(
     title="LinguaPorta Answer API",
     description="This is a REST API for LinguaPorta Answer",
@@ -48,6 +50,7 @@ fastapi_app = FastAPI(
 
 # CORS
 if not settings.DEBUG:
+    fastapi_app.add_middleware(ApiKeyUsedTimesCountMiddleware)
     fastapi_app.add_middleware(
         AuthorizerMiddleware,
         public_paths=["^/docs*", "/openapi.json", "^/redoc*", "^/django*"],
@@ -70,3 +73,12 @@ fastapi_app.include_router(api_router, prefix="/api")
 if settings.DEBUG:
     fastapi_app.mount("/django", django_app)
     fastapi_app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+"""
+API KEY
+"""
+from app.models import User
+
+for user in User.objects.filter(is_active=True):
+    os.environ[f"API_KEY_{user.id}"] = user.api_key

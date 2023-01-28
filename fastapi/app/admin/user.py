@@ -36,7 +36,6 @@ class UserAdmin(admin.ModelAdmin):
                 "fields": (
                     "username",
                     "password",
-                    "email",
                 )
             },
         ),
@@ -50,13 +49,14 @@ class UserAdmin(admin.ModelAdmin):
                 ),
             },
         ),
+        (_("API Key"), {"fields": ("api_key", "api_key_used_times")}),
     )
     add_fieldsets = (
         (
             None,
             {
                 "classes": ("wide",),
-                "fields": ("username", "email", "password1", "password2"),
+                "fields": ("username", "password1", "password2"),
             },
         ),
     )
@@ -65,14 +65,14 @@ class UserAdmin(admin.ModelAdmin):
     change_password_form = AdminPasswordChangeForm
     list_display = (
         "username",
-        "email",
+        "api_key_used_times",
     )
     list_filter = (
         "is_staff",
         "is_superuser",
         "is_active",
     )
-    search_fields = ("username", "email")
+    search_fields = ("username",)
     ordering = ("-created_at",)
     filter_horizontal = (
         "groups",
