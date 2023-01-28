@@ -15,9 +15,9 @@ class ApiKeyUsedTimesCountMiddleware:
 
         conn = HTTPConnection(scope)
 
-        api_key = conn.headers["x-api-key"]
+        api_key = conn.headers.get("x-api-key", "")
         user = await User.objects.filter(api_key=api_key).afirst()
         if user:
             user.api_key_used_times += 1
-            await user.save()
+            user.save()
         return await self.app(scope, receive, send)
