@@ -1,10 +1,10 @@
 from logging import getLogger
 
-from app.models import Question
+from app.models import Question, User
 from app.schemas import CreateQuestionSchema
 from asgiref.sync import sync_to_async
 
-from fastapi import Request
+from fastapi import HTTPException, Request
 
 logger = getLogger(__name__)
 
@@ -16,16 +16,19 @@ class QuestionAPI:
         request: Request,
         unit_id: int,
     ) -> list[Question]:
-        return await sync_to_async(list)(Question.objects.filter(unit=unit_id))
+        api_key = request.headers.get("X-API-KEY")
+        if not api_key:
+            raise HTTPException(401, "X-API-KEY is not found.")
 
-    @classmethod
-    async def get(
-        cls,
-        request: Request,
-        unit_id: int,
-        number: int,
-    ) -> Question:
-        return await Question.objects.aget(unit=unit_id, number=number)
+        user = await User.objects.filter(api_key=api_key).afirst()
+        if not user or not user.is_active:
+            raise HTTPException(401, "Invalid API key.")
+
+        if not user.can_get_questions:
+            raise HTTPException(403, "API key usage limit has been reached. Please reissue.")
+        user.get_questions_count += 1
+        user.save()
+        return await sync_to_async(list)(Question.objects.filter(unit=unit_id))
 
     @classmethod
     async def create(
