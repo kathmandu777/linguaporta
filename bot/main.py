@@ -48,7 +48,7 @@ def select_cocet() -> None:
     sys.exit()
 
 
-def select_unit(category_start: int, unit_start: int) -> tuple[str, int, list]:  # (lesson_name, unit_id, db_data)
+def select_unit(category_start: int, unit_start: int) -> tuple[str, int, list]:  # -> (lesson_name, unit_id, db_data)
     unit_start = (unit_start - 1) // 25 + 1
     try:
         driver.execute_script(("select_unit('drill', '" + str(category_start + (unit_start - 1) * 4) + "', '');"))
@@ -68,7 +68,13 @@ def select_unit(category_start: int, unit_start: int) -> tuple[str, int, list]: 
 
     if lesson_name in [x["name"] for x in units]:
         id: int = [x["id"] for x in units if x["name"] == lesson_name][0]
-        db_data: list = requests.get(f"{SERVER_ORIGIN}/api/units/{id}/questions/", headers=HEADER).json()
+        res = requests.get(f"{SERVER_ORIGIN}/api/units/{id}/questions/", headers=HEADER)
+        if res.status_code != 200:
+            print(res.json().get("detail", "Error while getting data from DB."))
+            driver.quit()
+            sys.exit()
+
+        db_data = res.json()
         if len(db_data) == 25:
             print(f"DBに {lesson_name} のデータはすべて存在しました。")
         else:

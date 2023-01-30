@@ -2,11 +2,7 @@ from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.options import IS_POPUP_VAR
 from django.contrib.auth import update_session_auth_hash
-from django.contrib.auth.forms import (
-    AdminPasswordChangeForm,
-    UserChangeForm,
-    UserCreationForm,
-)
+from django.contrib.auth.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 from django.core.exceptions import PermissionDenied
 from django.db import router, transaction
 from django.http import Http404, HttpResponseRedirect
@@ -49,7 +45,10 @@ class UserAdmin(admin.ModelAdmin):
                 ),
             },
         ),
-        (_("API Key"), {"fields": ("api_key", "api_key_used_times")}),
+        (
+            _("API Key"),
+            {"fields": ("api_key", "get_questions_count", "max_get_questions_count")},
+        ),
     )
     add_fieldsets = (
         (
@@ -65,7 +64,8 @@ class UserAdmin(admin.ModelAdmin):
     change_password_form = AdminPasswordChangeForm
     list_display = (
         "username",
-        "api_key_used_times",
+        "get_questions_count",
+        "max_get_questions_count",
     )
     list_filter = (
         "is_staff",
@@ -103,9 +103,7 @@ class UserAdmin(admin.ModelAdmin):
 
     def lookup_allowed(self, lookup, value):  # type: ignore
         # Don't allow lookups involving passwords.
-        return not lookup.startswith("password") and super().lookup_allowed(
-            lookup, value
-        )
+        return not lookup.startswith("password") and super().lookup_allowed(lookup, value)
 
     @sensitive_post_parameters_m
     @csrf_protect_m
@@ -202,8 +200,7 @@ class UserAdmin(admin.ModelAdmin):
 
         return TemplateResponse(
             request,
-            self.change_user_password_template
-            or "admin/auth/user/change_password.html",
+            self.change_user_password_template or "admin/auth/user/change_password.html",
             context,
         )
 

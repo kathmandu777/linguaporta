@@ -37,8 +37,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from .middlewares import ApiKeyUsedTimesCountMiddleware
-
 fastapi_app = FastAPI(
     title="LinguaPorta Answer API",
     description="This is a REST API for LinguaPorta Answer",
@@ -48,7 +46,6 @@ fastapi_app = FastAPI(
 
 # CORS
 if not settings.DEBUG:
-    fastapi_app.add_middleware(ApiKeyUsedTimesCountMiddleware)
     fastapi_app.add_middleware(
         AuthorizerMiddleware,
         public_paths=["^/docs*", "/openapi.json", "^/redoc*", "^/django*"],
